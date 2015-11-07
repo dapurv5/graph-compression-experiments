@@ -1,0 +1,17 @@
+*.class
+*~
+*.DS_Store
+
+# Package Files #
+*.ear
+*.pyc
+*.o
+
+.idea
+/target
+/.settings
+.classpath
+.project
+/bin
+/build
+
