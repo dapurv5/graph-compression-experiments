@@ -113,6 +113,8 @@ def count_variable_chunks(u, adjacency, jump):
     consec_diff_chunk = []
   return bits
 
+def count_uncompressed(adjacency):
+  return 64 * len(adjacency)
 
 def plot_variable_chunks_over_no_chunks(ind, off):
   j_min = 10
@@ -120,14 +122,17 @@ def plot_variable_chunks_over_no_chunks(ind, off):
   j_step = 10
   
   J = [] #jump sizes
-  CR = [] #compression ratios
+  CR = [] #compression ratios with plain difference encoding
+  CR_uncompressed = [] #compression ratios with the uncompressed version
   sum_adjacency = 0
   max_adjacency = 0  
   total_no_chunks = 0
+  total_uncompressed = 0
   for i in range(1, len(off)-1):
     adjacency = ind[off[i] : off[i+1]]
     adjacency.sort()
     total_no_chunks += count_no_chunks(i, adjacency)
+    total_uncompressed += count_uncompressed(adjacency)
     sum_adjacency += len(adjacency)
     max_adjacency = max(max_adjacency, len(adjacency))
 
@@ -139,12 +144,15 @@ def plot_variable_chunks_over_no_chunks(ind, off):
       total_variable_chunks += count_variable_chunks(i, adjacency, j)
     J.append(j)
     CR.append(total_no_chunks/total_variable_chunks)
+    CR_uncompressed.append(total_uncompressed/total_variable_chunks)
 
   print J
   print CR
+  print CR_uncompressed
   print "Avg length of adjacency = ", sum_adjacency/(len(off)-1)
   print "Max length of adjacency = ", max_adjacency  
   plot(J, CR, 'jump size in bits', 'compression ratio')
+  plot(J, CR_uncompressed, 'jump size in bits', 'compression ratio')
   
 
 def plot_fixed_chunks_over_no_chunks(ind, off):  
@@ -153,14 +161,17 @@ def plot_fixed_chunks_over_no_chunks(ind, off):
   t_step = 10
   
   T = [] #chunk sizes
-  CR = [] #compression ratios
+  CR = [] #compression ratios with plain difference encoding
+  CR_uncompressed = [] #compression ratios with the uncompressed version
   sum_adjacency = 0
   max_adjacency = 0
   total_no_chunks = 0
+  total_uncompressed = 0
   for i in range(1, len(off)-1):
     adjacency = ind[off[i] : off[i+1]]
     adjacency.sort()
     total_no_chunks += count_no_chunks(i, adjacency)
+    total_uncompressed += count_uncompressed(adjacency)
     sum_adjacency += len(adjacency)
     max_adjacency = max(max_adjacency, len(adjacency))
 
@@ -172,12 +183,16 @@ def plot_fixed_chunks_over_no_chunks(ind, off):
       total_fixed_chunks += count_fixed_chunks(i, adjacency, t)
     T.append(t)
     CR.append(total_no_chunks/total_fixed_chunks)
+    CR_uncompressed.append(total_uncompressed/total_fixed_chunks)
+    print total_uncompressed/total_no_chunks
 
   print T
   print CR
+  print CR_uncompressed
   print "Avg length of adjacency = ", sum_adjacency/(len(off)-1)
   print "Max length of adjacency = ", max_adjacency
   plot(T, CR, 'size of chunk', 'compression ratio')
+  plot(T, CR_uncompressed, 'size of chunk', 'compression ratio')
 
 
 def main():
