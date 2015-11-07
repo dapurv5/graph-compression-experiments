@@ -3,34 +3,20 @@
 
 import math
 import matplotlib.pyplot as plt
+import graph_readers as reader
+
+from math import log
+from math import ceil
 
 NUM_BITS_FOR_SIGN_BIT = 1
 SIZE_ELEM = 8
+NUM_BITS_FOR_BITS_TO_ENCODE = 8
 
-def readGraphDIMACS(filePath):
-  fp = open(filePath,"r")
-  firstLine = fp.readline().split()
-  nv = int(firstLine[0])
-  ne = int(firstLine[1])
-  nv+=1
-  ne*=2
-  off=[None]*(nv+1)
-  ind=[None]*(ne)
-
-  off[0]=0
-  off[1]=0    
-  v=1
-  e=0
-  for line in fp:
-    vAdj=line.split();
-    for u in vAdj:
-      ind[e]=int(u)
-      e+=1;
-
-    off[v+1]=off[v]+len(vAdj)
-    v+=1
-  fp.close()
-  return nv,ne,ind,off;
+def plot(X, Y, xlabel, ylabel):
+  plt.plot(X, Y)
+  plt.ylabel(ylabel)
+  plt.xlabel(xlabel)
+  plt.show()
 
 def get_consec_diff(u, adjacency):
   consec_diff = [None] * len(adjacency)
@@ -40,15 +26,28 @@ def get_consec_diff(u, adjacency):
   return consec_diff
 
 def count_no_chunks(u, adjacency):
-  """Given the vertex u and its adjacency"""
+  """Given the vertex u and its adjacency,
+     counts the number of bits required to encode the adjacency list
+     in a differential encoding scheme. (no chunks)
+  """
   consec_diff = get_consec_diff(u, adjacency)
-  num_bits = 0
+  num_bits_to_encode = 0
+  #take_incorrect_bits = False
   if consec_diff[0] < 0:
+    #take_incorrect_bits = False
     consec_diff[0] *= -1.0
 
   greatest_elem = max(consec_diff)
-  num_bits = math.ceil(math.log(greatest_elem, 2))
-  return num_bits * len(adjacency) + SIZE_ELEM + NUM_BITS_FOR_SIGN_BIT #extra sign bit for first vertex
+  num_bits_to_encode = ceil(log(greatest_elem, 2))
+  num_bits_to_encode = max(1, num_bits_to_encode)
+  
+  #if take_incorrect_bits:
+  #  num_bits_to_encode -= 1
+    
+  #write down the sign bit
+  #write down the num of bits req. to encode each value, call this e
+  #Write e bits, len(adjacency) number of times
+  return num_bits_to_encode * len(adjacency) + NUM_BITS_FOR_BITS_TO_ENCODE + NUM_BITS_FOR_SIGN_BIT
 
 
 def count_fixed_chunks(u, adjacency, t):
@@ -64,7 +63,7 @@ def count_fixed_chunks(u, adjacency, t):
   return bits
 
 
-def count_steepest_jump_chunks(u, adjacency, jump):
+def count_variable_chunks(u, adjacency, jump):
   """Given vertex u and its adjacency and a jump"""  
   bits = 0
   j = 1
@@ -72,93 +71,104 @@ def count_steepest_jump_chunks(u, adjacency, jump):
   
   if consec_diff_chunk[0] < 0:
     consec_diff_chunk[0] *= -1.0
+  greatest_elem = max(consec_diff_chunk)
   
   while j < len(adjacency):
-    max_in_chunk = max(consec_diff_chunk)
-    num_bits = math.ceil(math.log(max_in_chunk, 2)) + 1
+    num_bits_to_encode = ceil(log(greatest_elem, 2))
+    num_bits_to_encode = max(1, num_bits_to_encode)
     
     #Bits required before adding this element
-    bits_before_adding = num_bits * len(consec_diff_chunk)
+    bits_before_adding = num_bits_to_encode * len(consec_diff_chunk)
     
-    new_max_in_chunk = max(max_in_chunk, adjacency[j]-adjacency[j-1])
-    new_num_bits = math.ceil(math.log(new_max_in_chunk, 2)) + 1
+    new_greatest_elem = max(greatest_elem, adjacency[j]-adjacency[j-1])
+    new_num_bits_to_encode = ceil(log(new_greatest_elem, 2))
+    new_num_bits_to_encode = max(1, new_num_bits_to_encode)
     
     #Bits required after adding this element
-    bits_after_adding = new_num_bits * (len(consec_diff_chunk)+1)
+    bits_after_adding = new_num_bits_to_encode * (len(consec_diff_chunk)+1)
     
     if (bits_after_adding - bits_before_adding) < jump:
-      consec_diff_chunk.append(adjacency[j]-adjacency[j-1])
+      diff = adjacency[j]-adjacency[j-1]
+      consec_diff_chunk.append(diff)
+      greatest_elem = max(greatest_elem, diff)
     else:
-      bits += 16 + SIZE_ELEM + NUM_BITS_FOR_SIGN_BIT #number of elements in the chunk + #bits required to encode each value in the chunk + sign bit
+      #number of elements in the chunk + #bits required to encode each value in the chunk + sign bit
+      bits = bits + 16 + NUM_BITS_FOR_BITS_TO_ENCODE + NUM_BITS_FOR_SIGN_BIT
       greatest_elem = max(consec_diff_chunk)
-      num_bits = max(1, math.ceil(math.log(greatest_elem, 2)))
-      bits += num_bits * len(consec_diff_chunk)
+      num_bits_to_encode = ceil(log(greatest_elem, 2))
+      num_bits_to_encode = max(1, num_bits_to_encode)
+      bits += num_bits_to_encode * len(consec_diff_chunk)
       
       consec_diff_chunk = [adjacency[j] - u]
       if consec_diff_chunk[0] < 0:
         consec_diff_chunk[0] *= -1.0
+      greatest_elem = consec_diff_chunk[0]
     j += 1
   
   if len(consec_diff_chunk) > 0:
     greatest_elem = max(consec_diff_chunk)
-    num_bits = max(1, math.ceil(math.log(greatest_elem, 2)))
-    bits = bits + 16 + SIZE_ELEM + NUM_BITS_FOR_SIGN_BIT
-    bits = bits + num_bits * len(consec_diff_chunk)
+    num_bits_to_encode = max(1, ceil(log(greatest_elem, 2)))
+    bits = bits + 16 + NUM_BITS_FOR_BITS_TO_ENCODE + NUM_BITS_FOR_SIGN_BIT
+    bits = bits + num_bits_to_encode * len(consec_diff_chunk)
     consec_diff_chunk = []
   return bits
 
 
-def plot_steepest_jump_chunks_over_no_chunks(ind, off):
-  J = []
-  CR = []
+def plot_variable_chunks_over_no_chunks(ind, off):
+  j_min = 10
+  j_max = 100
+  j_step = 10
   
+  J = [] #jump sizes
+  CR = [] #compression ratios
+  sum_adjacency = 0
+  max_adjacency = 0  
   total_no_chunks = 0
   for i in range(1, len(off)-1):
     adjacency = ind[off[i] : off[i+1]]
+    adjacency.sort()
     total_no_chunks += count_no_chunks(i, adjacency)
+    sum_adjacency += len(adjacency)
+    max_adjacency = max(max_adjacency, len(adjacency))
 
-  for j in range(10,300,10):
-    total_steepest_jump_chunks = 0
-    sum_adjacency = 0
-    max_adjacency = 0
+  for j in range(j_min,j_max,j_step):
+    total_variable_chunks = 0
     for i in range(1,len(off)-1):
       adjacency = ind[off[i] : off[i+1]]
       adjacency.sort()
-      sum_adjacency += len(adjacency)
-      max_adjacency = max(max_adjacency, len(adjacency))
-      total_steepest_jump_chunks += count_steepest_jump_chunks(i, adjacency, j)
+      total_variable_chunks += count_variable_chunks(i, adjacency, j)
     J.append(j)
-    CR.append(total_no_chunks/total_steepest_jump_chunks)
+    CR.append(total_no_chunks/total_variable_chunks)
 
   print J
   print CR
   print "Avg length of adjacency = ", sum_adjacency/(len(off)-1)
-  print "Max length of adjacency = ", max_adjacency
-  
-  plt.plot(J, CR)
-  plt.ylabel('compression ratio')
-  plt.xlabel('jump size in bits')
-  plt.show()
+  print "Max length of adjacency = ", max_adjacency  
+  plot(J, CR, 'jump size in bits', 'compression ratio')
   
 
-def plot_fixed_chunks_over_no_chunks(ind, off):
-  T = []
-  CR = []
-
+def plot_fixed_chunks_over_no_chunks(ind, off):  
+  t_min = 10
+  t_max = 200
+  t_step = 10
+  
+  T = [] #chunk sizes
+  CR = [] #compression ratios
+  sum_adjacency = 0
+  max_adjacency = 0
   total_no_chunks = 0
   for i in range(1, len(off)-1):
     adjacency = ind[off[i] : off[i+1]]
+    adjacency.sort()
     total_no_chunks += count_no_chunks(i, adjacency)
+    sum_adjacency += len(adjacency)
+    max_adjacency = max(max_adjacency, len(adjacency))
 
-  for t in range(2,80,4):
+  for t in range(t_min,t_max,t_step):
     total_fixed_chunks = 0
-    sum_adjacency = 0
-    max_adjacency = 0
     for i in range(1,len(off)-1):
       adjacency = ind[off[i] : off[i+1]]
       adjacency.sort()
-      sum_adjacency += len(adjacency)
-      max_adjacency = max(max_adjacency, len(adjacency))
       total_fixed_chunks += count_fixed_chunks(i, adjacency, t)
     T.append(t)
     CR.append(total_no_chunks/total_fixed_chunks)
@@ -167,24 +177,18 @@ def plot_fixed_chunks_over_no_chunks(ind, off):
   print CR
   print "Avg length of adjacency = ", sum_adjacency/(len(off)-1)
   print "Max length of adjacency = ", max_adjacency
-  
-  plt.plot(T, CR)
-  plt.ylabel('compression ratio')
-  plt.xlabel('size of chunk')
-  plt.show()
-  
-  
+  plot(T, CR, 'size of chunk', 'compression ratio')
+
+
 def main():
   #path = "/home/dapurv5/Desktop/Semesters/1st_semester/GRA/cnr-2000.graph"
-  #path = "/home/dapurv5/Desktop/Semesters/1st_semester/GRA/audikw1.graph"
-  path = "/home/dapurv5/Desktop/Semesters/1st_semester/GRA/citationCiteseer.graph"
+  path = "/home/dapurv5/Desktop/Semesters/1st_semester/GRA/audikw1.graph"
+  #path = "/home/dapurv5/Desktop/Semesters/1st_semester/GRA/citationCiteseer.graph"
   #path = "/home/dapurv5/Desktop/Semesters/1st_semester/GRA/preferentialAttachment.graph"
   #path = "/home/dapurv5/Desktop/Semesters/1st_semester/GRA/smallworld.graph"
-  num_vertices, num_edges, ind, off = readGraphDIMACS(path)
+  num_vertices, num_edges, ind, off = reader.readGraphDIMACS(path)
   #plot_fixed_chunks_over_no_chunks(ind, off)
-  #plot_steepest_jump_chunks_over_no_chunks(ind, off)
-  count_no_chunks(2704, [116164, 135733, 148114, 185431, 242311])
-  print "howdie"
+  plot_variable_chunks_over_no_chunks(ind, off)
 
 if __name__ == "__main__":
   main()
