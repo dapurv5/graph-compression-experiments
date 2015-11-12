@@ -1,36 +1,51 @@
 package com.gatech.graphcompression;
 
-import java.util.Arrays;
-
-import me.lemire.integercompression.IntWrapper;
-import me.lemire.integercompression.differential.IntegratedBinaryPacking;
-import me.lemire.integercompression.differential.IntegratedComposition;
-import me.lemire.integercompression.differential.IntegratedIntegerCODEC;
-import me.lemire.integercompression.differential.IntegratedVariableByte;
-
-public class Compressor {
+public abstract class Compressor {
   
-  private final static int NUM_BITS_FOR_SIGN_BIT = 1;
-  private final static int NUM_BITS_FOR_BITS_TO_ENCODE = 8;
+  private int param = -1;
+  private boolean isParameterized = false;
+  private int bitsToEncode = 64;
   
-  private IntegratedIntegerCODEC codecPFOR = null;
+  /**
+   * Returns the number of bits req. to encode this adjacency
+   */
+  public abstract int compress(int u, int[] adjacency);
   
-  public Compressor() {
-     codecPFOR =  new IntegratedComposition(
-        new IntegratedBinaryPacking(),
-        new IntegratedVariableByte());
+  /**
+   * Returns true if the compressor is parameterized
+   * eg. any compressor using block size or number of edges in a block or jump in bits, etc
+   * @return
+   */
+  public boolean isParameterized() {
+    return isParameterized;
   }
   
-  public int countPFOR(int[] adjacency) {
-    int[] compressed = new int[adjacency.length+1024];
-    IntWrapper inputoffset = new IntWrapper(0);
-    IntWrapper outputoffset = new IntWrapper(0);
-    codecPFOR.compress(adjacency,inputoffset,adjacency.length,compressed,outputoffset);
-    compressed = Arrays.copyOf(compressed, outputoffset.intValue());
-    return compressed.length*32;
+  /**
+   * Sets the value of the parameter if its a parameterized compressor.
+   * @param param
+   */
+  public void setParam(int param) {
+    this.isParameterized = true;
+    this.param = param;
   }
   
-  private int[] getConsecDiff(int u, int[] adjacency) {
+  protected int getParam(int param) {
+    return param;
+  }
+  
+  /**
+   * Set number of bits to encode a vertex, this can either
+   * be 32 or 64.
+   */
+  public void setBitsToEncode(int bits) {
+    this.bitsToEncode = bits;
+  }
+  
+  public int getBitsToEncode(int[] adjacency) {
+    return adjacency.length * this.bitsToEncode;
+  }
+  
+  protected int[] getConsecDiffWithAdjElem(int u, int[] adjacency) {
     int[] consecDiff = new int[adjacency.length];
     consecDiff[0] = adjacency[0] - u;
     for(int i = 1; i < adjacency.length; i++) {
@@ -39,45 +54,12 @@ public class Compressor {
     return consecDiff;
   }
   
-  public int countNoChunks(int u, int[] adjacency) {
-    int[] consecDiff = getConsecDiff(u, adjacency);
-    int numBitsToEncode = 0;
-    if(consecDiff[0] < 0) {
-      consecDiff[0] *= -1.0;
+  protected int[] getConsecDiffWithSrcElem(int u, int[] adjacency) {
+    int[] consecDiff = new int[adjacency.length];
+    consecDiff[0] = adjacency[0] - u;
+    for(int i = 1; i < adjacency.length; i++) {
+      consecDiff[i] = adjacency[i] - u;
     }
-    
-    int greatestElem = -1;
-    for(int i = 0; i < adjacency.length; i++) {
-      greatestElem = Math.max(greatestElem, consecDiff[i]);
-    }
-    
-    double log2 = Math.log(2);
-    numBitsToEncode = (int)Math.ceil( Math.log(greatestElem)/log2);
-    numBitsToEncode = Math.max(1, numBitsToEncode);
-    
-    return numBitsToEncode*adjacency.length 
-        + NUM_BITS_FOR_BITS_TO_ENCODE
-        + NUM_BITS_FOR_SIGN_BIT;
-  }
-  
-  
-  public int countFixedChunks(int u, int[] adjacency, int t) {
-    int bits = 0;
-    int begin = 0;
-    while(begin < adjacency.length) {
-      int finish = Math.min(adjacency.length, begin+t);
-      int[] chunk = Arrays.copyOfRange(adjacency, begin, finish);
-      begin+=t;
-      bits+= countNoChunks(u, chunk);
-    }
-    return bits;
-  }
-
-  
-  /**
-   * Assuming we use 8 bytes to encode each value in the array.
-   */
-  public int countUncompressed(int[] adjacency) {
-    return adjacency.length * 64;
+    return consecDiff;
   }
 }
