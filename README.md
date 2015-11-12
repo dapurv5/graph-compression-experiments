@@ -7,11 +7,15 @@ https://docs.google.com/spreadsheets/d/11fAXU5Vt3MTevokwXgP6R2DCmu3vuR9HObFzWPMl
 
 
 
-### Tupical Dev. Cycle
+### Typical Dev. Cycle
 
 - Write an algorithm by subclassing Compressor(Java code)
 
 - mvn assembly:single (for creating the unified jar with dependencies)
 
-- python experiment.py
+- modify experiment.py to include this new algorithm in the experiment run
+
+- python experiment.py (creates a results.tsv file and plots in the plots folder)
+
+- import tsv files to google spreadsheet and compare results.
 
