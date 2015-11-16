@@ -3,6 +3,9 @@
 
 import csv
 import subprocess
+import matplotlib.pyplot as plt
+from pylab import *
+
 
 graph_dir="/home/dapurv5/Desktop/Semesters/1st_semester/GRA"
 plots_dir="/home/dapurv5/MyCode/gatech-projects/graph-compression-experiments/plots"
@@ -14,6 +17,7 @@ results_tmp_file="/home/dapurv5/MyCode/gatech-projects/graph-compression-experim
 results_file="/home/dapurv5/MyCode/gatech-projects/graph-compression-experiments/results.tsv"
 
 max_compression = {}
+axis_name = {}
 
 def execute(graph, compressor, param_min=-1, param_max=-1, param_step=-1):
   cmd = ['java',
@@ -25,19 +29,34 @@ def execute(graph, compressor, param_min=-1, param_max=-1, param_step=-1):
          plots_tmp_file,
          results_tmp_file]  
   if param_min > 0:
-    cmd.append(param_min)
-    cmd.append(param_max)
-    cmd.append(param_step)    
+    cmd.append(str(param_min))
+    cmd.append(str(param_max))
+    cmd.append(str(param_step))
   subprocess.call(cmd)
 
+def plot(X, Y, xlabel, ylabel):
+  plt.plot(X, Y)
+  plt.ylabel(ylabel)
+  plt.xlabel(xlabel)
+  #plt.show()
 
 def run_all_graphs(graphs, compressor, param_min=-1, param_max=-1, param_step=-1):
   for graph in graphs:
     graph_file = graph_dir + "/" + graph + ".graph"
     if param_min > 0:
       execute(graph_file, compressor, param_min, param_max, param_step)
-      #read plots_tmp_file
-      #plot the graph and save it in a file
+      
+      with open(plots_tmp_file, 'rb') as plotdata:
+        params = []
+        CR = []
+        for line in plotdata:
+          line = line.strip('\n')
+          param, cr = line.split(" ")
+          params.append(param)
+          CR.append(cr)
+      plot(params, CR, axis_name[compressor], 'compression-ratio')
+      savefig(plots_dir+"/"+compressor+"_"+graph+".png")
+      plt.clf()
     else:
       execute(graph_file, compressor)
       
@@ -53,13 +72,23 @@ def run_all_graphs(graphs, compressor, param_min=-1, param_max=-1, param_step=-1
         param = " "
       if compressor not in max_compression:
         max_compression[compressor] = {}
-      max_compression[compressor][graph]=best_compression_ratio + "("+param+")"
+      max_compression[compressor][graph]=best_compression_ratio + "("+str(param)+")"
       
   
   
 #Experiments
 compressor="adj_diff"
 run_all_graphs(graphs, compressor)
+
+compressor="adj_diff_fixed_edges"
+axis_name[compressor] = 'num edges in the block'
+block_size_min = 10
+block_size_max = 200
+block_size_step = 10
+run_all_graphs(graphs, compressor,
+               param_min = block_size_min,
+               param_max = block_size_max,
+               param_step = block_size_step)
 
 
 #write the max compression tsv file

@@ -61,9 +61,13 @@ public class GraphCompressionExperiment {
       }
       
       //Write this to the tsv file
+      double cr = (double)totalUncompressed/(double)totalCompressed;
+      cr = Double.valueOf(df2.format(cr));
+      plotsWriter.println(param+" "+cr);      
     }
     
-    double cr = (double)totalUncompressed/(double)totalCompressed;
+    plotsWriter.close();
+    double cr = (double)totalUncompressed/(double)minTotalCompressed;
     cr = Double.valueOf(df2.format(cr));
     resultsWriter.println(cr);
     resultsWriter.println(optimalParamValue);
@@ -74,6 +78,7 @@ public class GraphCompressionExperiment {
   private static Map<String, Compressor> getCompressors() {
     Map<String, Compressor> compressors = new HashMap<String, Compressor>();
     compressors.put(AdjDifference.NAME, new AdjDifference());
+    compressors.put(AdjDiffWithFixedEdgesInBlock.NAME, new AdjDiffWithFixedEdgesInBlock());
     return compressors;
   }
   
@@ -91,10 +96,10 @@ public class GraphCompressionExperiment {
     
     compressor.setBitsToEncode(Integer.parseInt(args[2]));
     String plotsTmpFile = args[3];
-    String resultsFile = args[4];
+    String resultsTmpFile = args[4];
     
     //Read cmd params and construct an experiment and set its params and the output files.
-    GraphCompressionExperiment exp = new GraphCompressionExperiment(compressor, plotsTmpFile, resultsFile);
+    GraphCompressionExperiment exp = new GraphCompressionExperiment(compressor, plotsTmpFile, resultsTmpFile);
     
     //Begin ugly code!
     if(args.length > 5) {

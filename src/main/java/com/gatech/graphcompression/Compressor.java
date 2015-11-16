@@ -29,7 +29,7 @@ public abstract class Compressor {
     this.param = param;
   }
   
-  protected int getParam(int param) {
+  protected int getParam() {
     return param;
   }
   
