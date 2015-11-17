@@ -1,5 +1,7 @@
 package com.gatech.graphcompression;
 
+import static java.lang.Math.*;
+
 /**
  * Adjacent Difference Encoding
  * Just take difference with adjacent element, the first element
@@ -19,12 +21,11 @@ public class AdjDifference extends Compressor{
     
     int greatestElem = -1;
     for(int i = 0; i < adjacency.length; i++) {
-      greatestElem = Math.max(greatestElem, consecDiff[i]);
+      greatestElem = max(greatestElem, consecDiff[i]);
     }
     
-    double log2 = Math.log(2);
-    numBitsToEncode = (int)Math.ceil( Math.log(greatestElem)/log2);
-    numBitsToEncode = Math.max(1, numBitsToEncode);
+    numBitsToEncode = (int)ceil(log2(greatestElem));
+    numBitsToEncode = max(1, numBitsToEncode);
     
     return numBitsToEncode*adjacency.length 
         + 8 //how many bits were used to compress each element

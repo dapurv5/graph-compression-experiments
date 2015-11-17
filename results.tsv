@@ -1,3 +1,4 @@
 compressor	audikw1	cnr-2000	citationCiteseer	preferentialAttachment	smallworld
 adj_diff_fixed_edges	0.5(10)	6.02(10)	3.55(180)	3.94(200)	4.37(10)
+adj_diff_variable_edges	0.42(10)	4.92(20)	3.22(30)	3.59(10)	4.46(20)
 adj_diff	0.41( )	5.13( )	3.55( )	3.95( )	4.26( )

@@ -15,7 +15,7 @@ public class AdjDiffWithFixedEdgesInBlock extends Compressor {
   public int compress(int u, int[] adjacency) {
     int bits = 0;
     int begin = 0;
-    int t = getParam();
+    int t = getParam(); //size of the block
     Compressor adjDiffComp = new AdjDifference();
     
     while(begin < adjacency.length) {

@@ -90,6 +90,16 @@ run_all_graphs(graphs, compressor,
                param_max = block_size_max,
                param_step = block_size_step)
 
+compressor="adj_diff_variable_edges"
+axis_name[compressor] = 'jump in num of bits'
+jump_min = 10
+jump_max = 100
+jump_step = 10
+run_all_graphs(graphs, compressor,
+               param_min = jump_min,
+               param_max = jump_max,
+               param_step = jump_step)
+
 
 #write the max compression tsv file
 with open(results_file, 'wb') as csvfile:

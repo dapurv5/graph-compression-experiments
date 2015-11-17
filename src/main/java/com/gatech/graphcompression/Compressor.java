@@ -5,6 +5,7 @@ public abstract class Compressor {
   private int param = -1;
   private boolean isParameterized = false;
   private int bitsToEncode = 64;
+  private final double log2 = Math.log(2);
   
   /**
    * Returns the number of bits req. to encode this adjacency
@@ -61,5 +62,9 @@ public abstract class Compressor {
       consecDiff[i] = adjacency[i] - u;
     }
     return consecDiff;
+  }
+  
+  protected double log2(int n) {
+    return Math.log(n)/log2;
   }
 }
