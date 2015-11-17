@@ -80,6 +80,7 @@ public class GraphCompressionExperiment {
     compressors.put(AdjDifference.NAME, new AdjDifference());
     compressors.put(AdjDiffWithFixedEdgesInBlock.NAME, new AdjDiffWithFixedEdgesInBlock());
     compressors.put(AdjDiffWithVariableEdgesInBlock.NAME, new AdjDiffWithVariableEdgesInBlock());
+    compressors.put(PFor.NAME, new PFor());
     return compressors;
   }
   

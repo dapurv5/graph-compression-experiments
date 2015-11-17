@@ -100,6 +100,9 @@ run_all_graphs(graphs, compressor,
                param_max = jump_max,
                param_step = jump_step)
 
+#Experiments
+compressor="pfor"
+run_all_graphs(graphs, compressor)
 
 #write the max compression tsv file
 with open(results_file, 'wb') as csvfile:
