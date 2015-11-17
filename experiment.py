@@ -104,6 +104,16 @@ run_all_graphs(graphs, compressor,
 compressor="pfor"
 run_all_graphs(graphs, compressor)
 
+compressor="src_diff_fixed_edges"
+axis_name[compressor] = 'num edges in the block'
+block_size_min = 10
+block_size_max = 200
+block_size_step = 10
+run_all_graphs(graphs, compressor,
+               param_min = block_size_min,
+               param_max = block_size_max,
+               param_step = block_size_step)
+
 #write the max compression tsv file
 with open(results_file, 'wb') as csvfile:
   fieldnames=['compressor']

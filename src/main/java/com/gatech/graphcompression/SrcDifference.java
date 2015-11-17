@@ -3,17 +3,16 @@ package com.gatech.graphcompression;
 import static java.lang.Math.*;
 
 /**
- * Adjacent Difference Encoding
- * Just take difference with adjacent element, the first element
- * takes a difference with the source vertex.
+ * Source Difference Encoding
+ * Just take difference source vertex
  * @author dapurv5
  */
-public class AdjDifference extends Compressor{
+public class SrcDifference extends Compressor{
   
-  public final static String NAME = "adj_diff";
+  public final static String NAME = "src_diff";
   
   public int compress(int u, int[] adjacency) {
-    int[] consecDiff = getDiffWithAdjElem(u, adjacency);
+    int[] consecDiff = getDiffWithSrcElem(u, adjacency);
     int numBitsToEncode = 0;
     if(consecDiff[0] < 0) {
       consecDiff[0] *= -1.0;

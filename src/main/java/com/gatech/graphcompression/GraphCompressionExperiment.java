@@ -79,8 +79,9 @@ public class GraphCompressionExperiment {
     Map<String, Compressor> compressors = new HashMap<String, Compressor>();
     compressors.put(AdjDifference.NAME, new AdjDifference());
     compressors.put(AdjDiffWithFixedEdgesInBlock.NAME, new AdjDiffWithFixedEdgesInBlock());
-    compressors.put(AdjDiffWithVariableEdgesInBlock.NAME, new AdjDiffWithVariableEdgesInBlock());
+    compressors.put(AdjDiffWithVariableEdgesInBlock.NAME, new AdjDiffWithVariableEdgesInBlock());    
     compressors.put(PFor.NAME, new PFor());
+    compressors.put(SrcDiffWithFixedEdgesInBlock.NAME, new SrcDiffWithFixedEdgesInBlock());
     return compressors;
   }
   

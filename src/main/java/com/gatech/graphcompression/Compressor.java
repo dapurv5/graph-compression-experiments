@@ -46,7 +46,7 @@ public abstract class Compressor {
     return adjacency.length * this.bitsToEncode;
   }
   
-  protected int[] getConsecDiffWithAdjElem(int u, int[] adjacency) {
+  protected int[] getDiffWithAdjElem(int u, int[] adjacency) {
     int[] consecDiff = new int[adjacency.length];
     consecDiff[0] = adjacency[0] - u;
     for(int i = 1; i < adjacency.length; i++) {
@@ -55,7 +55,7 @@ public abstract class Compressor {
     return consecDiff;
   }
   
-  protected int[] getConsecDiffWithSrcElem(int u, int[] adjacency) {
+  protected int[] getDiffWithSrcElem(int u, int[] adjacency) {
     int[] consecDiff = new int[adjacency.length];
     consecDiff[0] = adjacency[0] - u;
     for(int i = 1; i < adjacency.length; i++) {
